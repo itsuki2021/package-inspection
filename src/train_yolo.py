@@ -7,6 +7,8 @@ YOLOv26 目标检测模型训练脚本
 
 from ultralytics import YOLO
 import os
+import yaml
+from pathlib import Path
 
 
 def train_yolo_model():
@@ -20,17 +22,42 @@ def train_yolo_model():
     model = YOLO('yolo26n.pt')
     
     # 2. 设置训练参数
-    # 获取当前脚本所在目录的绝对路径
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    data_config = os.path.join(current_dir, 'data/bag_yolo/dataset.yaml')
+    # 获取当前脚本所在目录
+    current_dir = Path(__file__).resolve().parent
+    # 项目根目录
+    project_root = current_dir.parent
+    # 数据集配置文件路径
+    data_config_path = project_root / 'data' / 'bag_yolo' / 'dataset.yaml'
     
-    print(f"\n数据集配置文件：{data_config}")
+    print(f"\n数据集配置文件：{data_config_path}")
+    
+    # 3. 读取并修改数据集配置（使用绝对路径避免相对路径问题）
+    with open(data_config_path, 'r', encoding='utf-8') as f:
+        data_config = yaml.safe_load(f)
+    
+    # 将 path 设置为项目根目录的绝对路径
+    data_config['path'] = str(project_root / 'data' / 'bag_yolo')
+    
+    # 创建临时配置文件（放在项目根目录的临时文件夹中）
+    temp_dir = project_root / '.yolo_temp'
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    temp_config_path = temp_dir / 'temp_dataset.yaml'
+    
+    with open(temp_config_path, 'w', encoding='utf-8') as f:
+        yaml.dump(data_config, f, allow_unicode=True)
+    
+    print(f"使用临时数据集配置：{temp_config_path}")
+    print(f"数据集路径：{data_config['path']}")
     print("\n开始训练模型...")
     print("=" * 50)
     
-    # 3. 开始训练
+    # 设置训练输出目录（使用绝对路径）
+    train_project_dir = project_root / 'runs' / 'detect'
+    train_project_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 4. 开始训练
     results = model.train(
-        data=data_config,          # 数据集配置文件路径
+        data=str(temp_config_path),  # 使用临时配置文件
         epochs=100,                # 训练轮数
         imgsz=640,                 # 输入图像尺寸
         batch=16,                  # 批次大小
@@ -46,7 +73,7 @@ def train_yolo_model():
         save=True,                 # 保存检查点
         save_period=-1,            # 每 N 个 epoch 保存一次（-1 表示只保存最后和最佳）
         verbose=True,              # 详细输出
-        project='runs/detect',     # 项目目录
+        project=str(train_project_dir),     # 项目目录（绝对路径）
         name='bag_yolo26n_train',  # 实验名称
         exist_ok=False,            # 是否覆盖已有实验
         pretrained=True,           # 使用预训练权重
@@ -57,6 +84,12 @@ def train_yolo_model():
     print("\n" + "=" * 50)
     print("训练完成！")
     print("=" * 50)
+    
+    # 清理临时文件
+    if temp_config_path.exists():
+        temp_config_path.unlink()
+        print(f"已清理临时配置文件：{temp_config_path}")
+    
     print(f"\n训练结果保存在：runs/detect/bag_yolo26n_train/")
     print(f"最佳模型权重：runs/detect/bag_yolo26n_train/weights/best.pt")
     print(f"最后模型权重：runs/detect/bag_yolo26n_train/weights/last.pt")
