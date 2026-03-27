@@ -205,3 +205,26 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
+runs/detect/*/
+!runs/detect/bag_yolo26n_train/
+runs/detect/bag_yolo26n_train/weights/*.pt
+*.jpg
+*.png
+!data/bag_yolo/images/
+!data/bag_yolo/labels/
+
+# Temporary files
+*.tmp
+temp/
+
+# Streamlit
+.streamlit/secrets.toml
