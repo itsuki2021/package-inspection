@@ -65,7 +65,6 @@ cv2.imwrite('result.jpg', result_image)
 ```
 package-inspection/
 ├── data/                      # 数据集目录
-│   ├── bag_labelme/          # Labelme 格式原始标注数据
 │   └── bag_yolo/             # YOLO 格式训练数据
 ├── runs/                     # 训练输出目录（包含训练好的模型）
 ├── src/                      # 核心源代码
